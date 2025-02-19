@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      perfect-freehand-for-svelte:
+        specifier: ^1.2.1
+        version: 1.2.1
     devDependencies:
       '@eslint/compat':
         specifier: ^1.2.5
@@ -889,6 +893,9 @@ packages:
   path-key@3.1.1:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
+
+  perfect-freehand-for-svelte@1.2.1:
+    resolution: {integrity: sha512-ckBiAAyfHswuQX8OSctqfiK1DzfA5mh6Eg0qDj/zQf7wpfbVrexyibRul4GCUgQRxsDWipUCXo9Q4LBZEAqfRQ==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -1886,6 +1893,8 @@ snapshots:
   path-exists@4.0.0: {}
 
   path-key@3.1.1: {}
+
+  perfect-freehand-for-svelte@1.2.1: {}
 
   picocolors@1.1.1: {}
 

@@ -1,2 +1,129 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script>
+	import { getStroke } from 'perfect-freehand-for-svelte';
+	import { getSvgPathFromStroke } from '$lib/utils';
+	import { onMount } from 'svelte';
+	
+	let points = [];
+	let width = 700;
+	let height = 700;
+	let isWandering = false;
+	let lastMouseX = 0;
+	let lastMouseY = 0;
+	const maxPoints = 100;
+	const delayMs = 130;
+	
+	// Wandering parameters
+	const wanderChance = 0.01; // Chance to start wandering on each frame
+	const wanderDuration = 2000; // How long to wander in ms
+	const returnDuration = 1000; // How long to take to return to mouse
+	let wanderVelocityX = 0;
+	let wanderVelocityY = 0;
+	
+	onMount(() => {
+		const updateDimensions = () => {
+			width = window.innerWidth;
+			height = window.innerHeight;
+		};
+		window.addEventListener('resize', updateDimensions);
+		return () => window.removeEventListener('resize', updateDimensions);
+	});
+	
+	function handlePointerMove(e) {
+		lastMouseX = e.pageX;
+		lastMouseY = e.pageY;
+		
+		if (!isWandering) {
+			setTimeout(() => {
+				points = [...points, [e.pageX, e.pageY, e.pressure]].slice(-maxPoints);
+			}, delayMs);
+		}
+	}
+	
+	function startWandering() {
+		if (isWandering) return;
+		isWandering = true;
+		
+		// Set random velocities
+		wanderVelocityX = (Math.random() - 0.5) * 20;
+		wanderVelocityY = (Math.random() - 0.5) * 20;
+		
+		// Get current position (last point or mouse position)
+		let currentX = points.length > 0 ? points[points.length - 1][0] : lastMouseX;
+		let currentY = points.length > 0 ? points[points.length - 1][1] : lastMouseY;
+		
+		const wanderInterval = setInterval(() => {
+			// Add some randomness to velocity
+			wanderVelocityX += (Math.random() - 0.5) * 2;
+			wanderVelocityY += (Math.random() - 0.5) * 2;
+			
+			// Keep velocities in bounds
+			wanderVelocityX = Math.max(-20, Math.min(20, wanderVelocityX));
+			wanderVelocityY = Math.max(-20, Math.min(20, wanderVelocityY));
+			
+			// Update position
+			currentX += wanderVelocityX;
+			currentY += wanderVelocityY;
+			
+			// Bounce off edges
+			if (currentX < 0 || currentX > width) wanderVelocityX *= -1;
+			if (currentY < 0 || currentY > height) wanderVelocityY *= -1;
+			
+			points = [...points, [currentX, currentY, 0.5]].slice(-maxPoints);
+		}, 16); // 60fps-ish
+	
+		// Stop wandering after duration
+		setTimeout(() => {
+			clearInterval(wanderInterval);
+			returnToMouse();
+		}, wanderDuration);
+	}
+	
+	function returnToMouse() {
+		const startX = points[points.length - 1][0];
+		const startY = points[points.length - 1][1];
+		const startTime = Date.now();
+		
+		const returnInterval = setInterval(() => {
+			const progress = (Date.now() - startTime) / returnDuration;
+			if (progress >= 1) {
+				clearInterval(returnInterval);
+				isWandering = false;
+				return;
+			}
+			
+			// Ease back to mouse position
+			const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+			const currentX = startX + (lastMouseX - startX) * easedProgress;
+			const currentY = startY + (lastMouseY - startY) * easedProgress;
+			
+			points = [...points, [currentX, currentY, 0.5]].slice(-maxPoints);
+		}, 16);
+	}
+	
+	// Randomly decide to start wandering
+	setInterval(() => {
+		if (!isWandering && Math.random() < wanderChance) {
+			startWandering();
+		}
+	}, 100);
+	
+	$: stroke = getStroke(points, {
+		size: 55,
+		thinning: 0,
+		smoothing: 0,
+		streamline: 1
+	});
+	
+	$: pathData = getSvgPathFromStroke(stroke);
+	</script>
+	
+	<svelte:window bind:innerWidth={width} bind:innerHeight={height} />
+	
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="0 0 {width} {height}"
+		style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; touch-action: none;"
+		on:pointermove={handlePointerMove}
+	>
+		<path d={pathData} />
+	</svg>
