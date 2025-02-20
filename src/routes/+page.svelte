@@ -6,6 +6,7 @@
 	<p class="intro">
 		<a href="./1">Blob 1</a>
 		<a href="./2">Blob 2</a>
+		<a href="./3">Blob 3</a>
 	</p>
 
 </article>
